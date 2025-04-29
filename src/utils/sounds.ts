@@ -4,7 +4,7 @@
 class SoundEffect {
   private audio: HTMLAudioElement | null = null;
   private loaded = false;
-  
+
   constructor(private src: string) {
     if (typeof window !== 'undefined') {
       this.audio = new Audio(src);
@@ -14,7 +14,7 @@ class SoundEffect {
       this.audio.load();
     }
   }
-  
+
   play() {
     if (this.audio && this.loaded) {
       // Clone the audio to allow overlapping sounds
@@ -34,6 +34,7 @@ export const sounds = {
   wrong: new SoundEffect('/sounds/wrong.mp3'),
   gameStart: new SoundEffect('/sounds/game-start.mp3'),
   tick: new SoundEffect('/sounds/tick.mp3'),
+  reset: new SoundEffect('/sounds/reset.mp3'),
 };
 
 // Audio context for more advanced sounds if needed
@@ -58,19 +59,19 @@ export function getAudioContext() {
 export function playTone(frequency: number, duration: number, type: OscillatorType = 'sine') {
   const ctx = getAudioContext();
   if (!ctx) return;
-  
+
   const oscillator = ctx.createOscillator();
   const gain = ctx.createGain();
-  
+
   oscillator.type = type;
   oscillator.frequency.setValueAtTime(frequency, ctx.currentTime);
-  
+
   gain.gain.setValueAtTime(0.5, ctx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-  
+
   oscillator.connect(gain);
   gain.connect(ctx.destination);
-  
+
   oscillator.start();
   oscillator.stop(ctx.currentTime + duration);
 }

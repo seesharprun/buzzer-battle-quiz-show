@@ -12,14 +12,14 @@ const WaitingForHostScreen = () => {
       transition={{ duration: 0.4 }}
     >
       <motion.p
-        className="text-2xl font-bold mb-4"
+        className="text-4xl font-bold mb-4"
         animate={{ y: [0, -5, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
       >
         👑 Game Host 👑
       </motion.p>
       <motion.p
-        className="text-xl"
+        className="text-2xl"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
@@ -27,7 +27,7 @@ const WaitingForHostScreen = () => {
         Press SPACE to start the round
       </motion.p>
       <motion.p
-        className="text-sm mt-2"
+        className="text-md mt-2"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.4 }}

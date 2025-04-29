@@ -297,7 +297,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const resetScores = () => {
     dispatchScoreEvent({ type: 'RESET' });
     setRoundCount(0);
-    sounds.gameStart.play();
+    sounds.reset.play();
   };
 
   return (
