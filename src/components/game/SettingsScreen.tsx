@@ -26,6 +26,13 @@ const PlayerEditor: React.FC<PlayerEditorProps> = ({ playerNumber, config, onSav
     const { setPreviewPlayer } = useGameState();
     const [isDirty, setIsDirty] = useState(false);
     const [showSaveAnimation, setShowSaveAnimation] = useState(false);
+
+    // Sync local state with global config changes
+    useEffect(() => {
+        setName(config.name);
+        setColor(config.color);
+        setIsDirty(false);
+    }, [config]);
     
     // Track if there are unsaved changes
     useEffect(() => {
@@ -37,7 +44,7 @@ const PlayerEditor: React.FC<PlayerEditorProps> = ({ playerNumber, config, onSav
     }, [name, color, config.name, config.color]);
 
     const handleSave = () => {
-        onSave({ name, color });
+        onSave({ name, color }); // explicitly pass current state values
         setIsDirty(false);
         
         // Show save animation
@@ -62,7 +69,10 @@ const PlayerEditor: React.FC<PlayerEditorProps> = ({ playerNumber, config, onSav
     return (
         <div className="bg-gray-800 p-4 rounded-lg shadow-lg mb-4">
             <h3 className="text-xl font-bold mb-2 flex items-center">
-                Player {playerNumber}
+                <div className="bg-gray-600 rounded-lg px-2 py-1 mr-2 text-xs">
+                    {playerNumber}
+                </div>
+                {name}
                 {isDirty && (
                     <span className="ml-2 text-amber-400 text-sm" title="Unsaved changes">*</span>
                 )}

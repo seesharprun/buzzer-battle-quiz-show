@@ -17,8 +17,8 @@ const NumberDisplay = ({ activatedNumber }: { activatedNumber: string }) => {
   const { playerConfigs } = useGameState();
   
   const playerConfig = playerConfigs[activatedNumber];
-  const playerName = playerConfig?.name || `Player ${activatedNumber}`;
-  const playerColor = playerConfig?.color || 'red';
+  const playerName = playerConfig?.name || `Player ${activatedNumber ?? 'unknown'}`;
+  const playerColor = playerConfig?.color || 'bg-gray-900';
 
   return <NumberRender playerName={playerName} playerColor={playerColor} />;
 };
@@ -50,7 +50,7 @@ const NumberRender = ({
     }
     
     // Fallback to red if color conversion fails
-    return `rgba(255, 0, 0, ${opacity})`;
+    return `bg-gray-900`;
   };
 
   const colorWithIntensity = getColorStyle(playerColor);
@@ -131,8 +131,8 @@ const NumberCanvas = ({ children, activatedNumber, previewConfig }: NumberCanvas
   // For preview mode - use provided config directly if available
   if (activatedNumber && previewConfig) {
     // Using direct props instead of context
-    const playerName = previewConfig.name || `Player ${activatedNumber}`;
-    const playerColor = previewConfig.color || 'red';
+    const playerName = previewConfig.name || `Player ${activatedNumber ?? 'unknown'}`;
+    const playerColor = previewConfig.color || 'bg-gray-900';
     
     return <NumberRender 
       playerName={playerName} 

@@ -159,22 +159,6 @@ const GameControls = () => {
     );
   }
 
-  // Render controls for READY_FOR_PLAYERS or WRONG_ANSWER states
-  if (gameState === GameState.READY_FOR_PLAYERS || gameState === GameState.WRONG_ANSWER) {
-    return (
-      <motion.div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4">
-        <motion.button
-          className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-bold text-lg"
-          onClick={resetGame}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Skip (S)
-        </motion.button>
-      </motion.div>
-    );
-  }
-
   return null;
 };
 

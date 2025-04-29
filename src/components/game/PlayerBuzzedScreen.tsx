@@ -10,8 +10,8 @@ const PlayerBuzzedScreen = () => {
   
   // Get player configuration or use defaults if not found
   const playerConfig = pressedKey ? playerConfigs[pressedKey] : null;
-  const playerName = playerConfig?.name || `Player ${pressedKey}`;
-  const playerColor = playerConfig?.color || 'red';
+  const playerName = playerConfig?.name || pressedKey ? `Player ${pressedKey}` : '';
+  const playerColor = playerConfig?.color || 'bg-gray-900';
 
   useEffect(() => {
     if (flashingEffect) {
@@ -48,7 +48,7 @@ const PlayerBuzzedScreen = () => {
     }
     
     // Fallback to red if color conversion fails
-    return `rgba(255, 0, 0, ${opacity})`;
+    return `bg-gray-900`;
   };
   
   // Apply intensity based on animation state
