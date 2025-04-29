@@ -7,13 +7,14 @@ import WaitingForHostScreen from './WaitingForHostScreen';
 import PlayerBuzzedScreen from './PlayerBuzzedScreen';
 import WrongAnswerScreen from './WrongAnswerScreen';
 import CorrectAnswerScreen from './CorrectAnswerScreen';
+import SettingsScreen from './SettingsScreen';
 import GameControls from './GameControls';
 import GameScoreboard from './GameScoreboard';
 import GameRoundCounter from './GameRoundCounter';
 import { useEffect } from 'react';
 
 const BuzzerGame = () => {
-  const { gameState, pressedKey, animationState, setAnimationState } = useGameState();
+  const { gameState, pressedKey, setAnimationState } = useGameState();
 
   // Animation effect for pulsing when a player has buzzed in
   useEffect(() => {
@@ -73,6 +74,11 @@ const BuzzerGame = () => {
 
       {/* Game Controls */}
       <GameControls />
+      
+      {/* Settings Screen - Shown when in settings state */}
+      <AnimatePresence>
+        {gameState === GameState.SETTINGS && <SettingsScreen />}
+      </AnimatePresence>
     </div>
   );
 };

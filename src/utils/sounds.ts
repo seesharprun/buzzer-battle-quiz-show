@@ -42,6 +42,7 @@ let audioContext: AudioContext | null = null;
 export function getAudioContext() {
   if (typeof window !== 'undefined' && !audioContext) {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       if (AudioContextClass) {
         audioContext = new AudioContextClass();

@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { useGameState, GameState } from '../../context/GameStateContext';
-import { sounds } from '../../utils/sounds';
 import { motion, useAnimationControls } from 'motion/react';
 
 const GameControls = () => {
@@ -13,7 +12,8 @@ const GameControls = () => {
     penalizePlayer,
     resetGame,
     startNewRound,
-    bannedPlayers
+    bannedPlayers,
+    toggleSettings
   } = useGameState();
 
   const buttonControls = useAnimationControls();
@@ -21,6 +21,12 @@ const GameControls = () => {
   // Handle key press events
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Settings shortcut - 'o' key to open/close settings
+      if (e.key === 'o' && (gameState === GameState.WAITING_FOR_HOST || gameState === GameState.SETTINGS)) {
+        toggleSettings();
+        return;
+      }
+
       // Host control - Space key to start a round
       if (e.key === ' ' && gameState === GameState.WAITING_FOR_HOST) {
         startNewRound();
@@ -89,9 +95,33 @@ const GameControls = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, bannedPlayers, handlePlayerBuzz, awardPoint, penalizePlayer, resetGame, startNewRound, buttonControls]);
+  }, [gameState, bannedPlayers, handlePlayerBuzz, awardPoint, penalizePlayer, resetGame, startNewRound, buttonControls, toggleSettings]);
 
-  // Render optional UI controls when needed
+  // Render controls for WAITING_FOR_HOST state
+  if (gameState === GameState.WAITING_FOR_HOST) {
+    return (
+      <motion.div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4">
+        <motion.button
+          className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-bold text-lg"
+          onClick={startNewRound}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Start Round (SPACE)
+        </motion.button>
+        <motion.button
+          className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-bold text-lg"
+          onClick={toggleSettings}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Settings (O)
+        </motion.button>
+      </motion.div>
+    );
+  }
+  
+  // Render UI controls for when a player is buzzed in
   if (gameState === GameState.PLAYER_BUZZED) {
     return (
       <motion.div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4">
@@ -112,6 +142,22 @@ const GameControls = () => {
         >
           Wrong ✗ (W)
         </motion.button>
+        <motion.button
+          className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-bold text-lg"
+          onClick={resetGame}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Skip (S)
+        </motion.button>
+      </motion.div>
+    );
+  }
+
+  // Render controls for READY_FOR_PLAYERS or WRONG_ANSWER states
+  if (gameState === GameState.READY_FOR_PLAYERS || gameState === GameState.WRONG_ANSWER) {
+    return (
+      <motion.div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4">
         <motion.button
           className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-bold text-lg"
           onClick={resetGame}

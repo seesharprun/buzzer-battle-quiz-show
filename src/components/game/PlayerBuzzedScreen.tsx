@@ -5,8 +5,13 @@ import { useGameState } from '../../context/GameStateContext';
 import { useEffect } from 'react';
 
 const PlayerBuzzedScreen = () => {
-  const { pressedKey, animationState, flashingEffect } = useGameState();
+  const { pressedKey, animationState, flashingEffect, playerConfigs } = useGameState();
   const playerControls = useAnimationControls();
+  
+  // Get player configuration or use defaults if not found
+  const playerConfig = pressedKey ? playerConfigs[pressedKey] : null;
+  const playerName = playerConfig?.name || `Player ${pressedKey}`;
+  const playerColor = playerConfig?.color || 'red';
 
   useEffect(() => {
     if (flashingEffect) {
@@ -22,6 +27,33 @@ const PlayerBuzzedScreen = () => {
       });
     }
   }, [flashingEffect, playerControls]);
+
+  // Helper function to get the RGB values from a CSS color name
+  const getColorStyle = (color: string, opacity: number = 1) => {
+    // Create a temporary div to compute the RGB values
+    const tempDiv = document.createElement('div');
+    tempDiv.style.color = color;
+    document.body.appendChild(tempDiv);
+    
+    // Get the computed color
+    const computedColor = window.getComputedStyle(tempDiv).color;
+    document.body.removeChild(tempDiv);
+    
+    // If we have a valid color value, return it with the opacity; otherwise use fallback
+    if (computedColor && computedColor !== 'rgb(0, 0, 0)') {
+      const rgb = computedColor.match(/\d+/g);
+      if (rgb && rgb.length >= 3) {
+        return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${opacity})`;
+      }
+    }
+    
+    // Fallback to red if color conversion fails
+    return `rgba(255, 0, 0, ${opacity})`;
+  };
+  
+  // Apply intensity based on animation state
+  const colorWithIntensity = getColorStyle(playerColor);
+  const glowColor = getColorStyle(playerColor, 0.7);
 
   return (
     <motion.div
@@ -41,19 +73,19 @@ const PlayerBuzzedScreen = () => {
             width: `${400 * (1 + (animationState / 100) * 0.5)}px`,
             height: `${400 * (1 + (animationState / 100) * 0.5)}px`,
             borderRadius: '50%',
-            border: `8px solid #ff${Math.floor(200 + (animationState / 100) * 55).toString(16).padStart(2, '0')}33`,
-            boxShadow: `0 0 ${30 * (animationState / 100)}px #ff${Math.floor(200 + (animationState / 100) * 55).toString(16).padStart(2, '0')}33`
+            border: `8px solid ${colorWithIntensity}`,
+            boxShadow: `0 0 ${30 * (animationState / 100)}px ${glowColor}`
           }}
         />
         <motion.h1
           className="text-[150px] font-bold z-10"
           style={{
-            color: `#ff${Math.floor(200 + (animationState / 100) * 55).toString(16).padStart(2, '0')}33`,
-            textShadow: `0 0 ${30 * (animationState / 100)}px #ff${Math.floor(200 + (animationState / 100) * 55).toString(16).padStart(2, '0')}33`,
+            color: colorWithIntensity,
+            textShadow: `0 0 ${30 * (animationState / 100)}px ${glowColor}`,
             scale: 1 + (animationState / 100) * 0.5
           }}
         >
-          Player {pressedKey}
+          {playerName}
         </motion.h1>
       </motion.div>
     </motion.div>

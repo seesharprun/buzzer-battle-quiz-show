@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { sounds } from '../../utils/sounds';
 
 const ReadyScreen = () => {
-  const { readyAnimationState, setReadyAnimationState, resetGame } = useGameState();
+  const { readyAnimationState, resetGame } = useGameState();
   const readyControls = useAnimationControls();
 
   useEffect(() => {

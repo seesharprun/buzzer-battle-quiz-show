@@ -9,13 +9,39 @@ export enum GameState {
   READY_FOR_PLAYERS = 'ready_for_players',
   PLAYER_BUZZED = 'player_buzzed',
   WRONG_ANSWER = 'wrong_answer',
-  CORRECT_ANSWER = 'correct_answer'
+  CORRECT_ANSWER = 'correct_answer',
+  SETTINGS = 'settings' // New state for settings screen
 }
 
 // Player score tracking interface
 export interface PlayerScores {
   [key: string]: number;
 }
+
+// Player configuration interface
+export interface PlayerConfig {
+  name: string;
+  color: string;
+}
+
+// Default player configurations
+export const DEFAULT_COLORS = [
+  'red', 'blue', 'green', 'purple', 'orange', 
+  'teal', 'magenta', 'cyan', 'lime', 'pink'
+];
+
+export const DEFAULT_PLAYER_CONFIG: {[key: string]: PlayerConfig} = {
+  '0': { name: 'Player 0', color: 'red' },
+  '1': { name: 'Player 1', color: 'blue' },
+  '2': { name: 'Player 2', color: 'green' },
+  '3': { name: 'Player 3', color: 'purple' },
+  '4': { name: 'Player 4', color: 'orange' },
+  '5': { name: 'Player 5', color: 'teal' },
+  '6': { name: 'Player 6', color: 'magenta' },
+  '7': { name: 'Player 7', color: 'cyan' },
+  '8': { name: 'Player 8', color: 'lime' },
+  '9': { name: 'Player 9', color: 'pink' }
+};
 
 // Track banned players (who gave wrong answers) for the current round
 export interface BannedPlayers {
@@ -45,6 +71,12 @@ interface GameStateContextType {
   setRoundCount: React.Dispatch<React.SetStateAction<number>>;
   bannedPlayers: BannedPlayers;
   setBannedPlayers: React.Dispatch<React.SetStateAction<BannedPlayers>>;
+  playerConfigs: {[key: string]: PlayerConfig};
+  updatePlayerConfig: (key: string, config: PlayerConfig) => void;
+  previewPlayer: string | null;
+  setPreviewPlayer: React.Dispatch<React.SetStateAction<string | null>>;
+  isSettingsOpen: boolean;
+  toggleSettings: () => void;
   awardPoint: () => void;
   penalizePlayer: () => void;
   resetToHost: () => void;
@@ -55,6 +87,7 @@ interface GameStateContextType {
 }
 
 const STORAGE_KEY = 'seesharprun-buzzer-battle-quiz-show-react-game-state-context-scoreboard';
+const PLAYER_CONFIG_STORAGE_KEY = 'seesharprun-buzzer-battle-quiz-show-player-configs';
 
 const GameStateContext = createContext<GameStateContextType | undefined>(undefined);
 
@@ -67,6 +100,9 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const [scores, setScoresInternal] = useState<PlayerScores>({});
   const [roundCount, setRoundCount] = useState(0);
   const [bannedPlayers, setBannedPlayers] = useState<BannedPlayers>({});
+  const [playerConfigs, setPlayerConfigs] = useState<{[key: string]: PlayerConfig}>(DEFAULT_PLAYER_CONFIG);
+  const [previewPlayer, setPreviewPlayer] = useState<string | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Load scores from localStorage on initial mount
   useEffect(() => {
@@ -80,6 +116,18 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  // Load player configurations from localStorage
+  useEffect(() => {
+    try {
+      const savedPlayerConfigs = localStorage.getItem(PLAYER_CONFIG_STORAGE_KEY);
+      if (savedPlayerConfigs) {
+        setPlayerConfigs(JSON.parse(savedPlayerConfigs));
+      }
+    } catch (error) {
+      console.error('Failed to load player configurations from localStorage:', error);
+    }
+  }, []);
+
   // Save scores to localStorage whenever they change
   useEffect(() => {
     try {
@@ -88,6 +136,34 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       console.error('Failed to save scores to localStorage:', error);
     }
   }, [scores]);
+
+  // Save player configurations to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(PLAYER_CONFIG_STORAGE_KEY, JSON.stringify(playerConfigs));
+    } catch (error) {
+      console.error('Failed to save player configurations to localStorage:', error);
+    }
+  }, [playerConfigs]);
+
+  const updatePlayerConfig = (key: string, config: PlayerConfig) => {
+    setPlayerConfigs(prev => ({
+      ...prev,
+      [key]: config
+    }));
+  };
+
+  const toggleSettings = () => {
+    if (isSettingsOpen) {
+      // Coming back from settings
+      setGameState(GameState.WAITING_FOR_HOST);
+      setIsSettingsOpen(false);
+    } else {
+      // Going to settings
+      setGameState(GameState.SETTINGS);
+      setIsSettingsOpen(true);
+    }
+  };
 
   // Create a unified score dispatch system
   const dispatchScoreEvent = (event: ScoreEvent) => {
@@ -241,6 +317,12 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       setRoundCount,
       bannedPlayers,
       setBannedPlayers,
+      playerConfigs,
+      updatePlayerConfig,
+      previewPlayer,
+      setPreviewPlayer,
+      isSettingsOpen,
+      toggleSettings,
       awardPoint,
       penalizePlayer,
       resetToHost,
