@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useGameState, PlayerConfig } from '../../context/GameStateContext';
+import { useGameState, PlayerConfig, DEFAULT_COLORS } from '../../context/GameStateContext';
 import NumberCanvas from '../NumberCanvas';
 
 // HTML named colors for the color picker
@@ -12,7 +12,6 @@ const HTML_COLORS = [
     'White', 'Gold', 'Lime', 'Crimson', 'DarkBlue',
     'DodgerBlue', 'DeepPink', 'OrangeRed', 'Indigo', 'Chartreuse'
 ];
-
 
 interface PlayerEditorProps {
     playerNumber: string;
@@ -25,32 +24,88 @@ const PlayerEditor: React.FC<PlayerEditorProps> = ({ playerNumber, config, onSav
     const [name, setName] = useState(config.name);
     const [color, setColor] = useState(config.color);
     const { setPreviewPlayer } = useGameState();
+    const [isDirty, setIsDirty] = useState(false);
+    const [showSaveAnimation, setShowSaveAnimation] = useState(false);
+    
+    // Track if there are unsaved changes
+    useEffect(() => {
+        if (name !== config.name || color !== config.color) {
+            setIsDirty(true);
+        } else {
+            setIsDirty(false);
+        }
+    }, [name, color, config.name, config.color]);
 
     const handleSave = () => {
         onSave({ name, color });
+        setIsDirty(false);
+        
+        // Show save animation
+        setShowSaveAnimation(true);
+        setTimeout(() => {
+            setShowSaveAnimation(false);
+        }, 1500);
+    };
+    
+    const handleReset = () => {
+        setName(config.name);
+        setColor(config.color);
+        setIsDirty(false);
     };
 
-    const handleMouseEnter = () => {
+    // Set this player as the preview on mount and clear on unmount
+    useEffect(() => {
         setPreviewPlayer(playerNumber);
-    };
-
-    const handleMouseLeave = () => {
-        setPreviewPlayer(null);
-    };
+        return () => setPreviewPlayer(null);
+    }, [playerNumber, setPreviewPlayer]);
 
     return (
         <div className="bg-gray-800 p-4 rounded-lg shadow-lg mb-4">
-            <h3 className="text-xl font-bold mb-2">Player {playerNumber}</h3>
+            <h3 className="text-xl font-bold mb-2 flex items-center">
+                Player {playerNumber}
+                {isDirty && (
+                    <span className="ml-2 text-amber-400 text-sm" title="Unsaved changes">*</span>
+                )}
+            </h3>
             <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-300 mb-1">
                     Name
                 </label>
-                <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+
+                <div className="flex justify-between items-center mt-4">
+                    <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <div className="ml-2 flex gap-2">
+                        <button
+                            className="relative px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                            onClick={handleSave}
+                            disabled={!isDirty}
+                        >
+                            Save
+                            {showSaveAnimation && (
+                                <motion.span
+                                    className="absolute inset-0 bg-green-500 rounded-md z-0"
+                                    initial={{ opacity: 0.7 }}
+                                    animate={{ opacity: 0 }}
+                                    transition={{ duration: 1 }}
+                                />
+                            )}
+                        </button>
+                        {isDirty && (
+                            <button 
+                                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                                onClick={handleReset}
+                                title="Reset to last saved values"
+                            >
+                                Reset
+                            </button>
+                        )}
+                    </div>
+                </div>
             </div>
 
             <div className="mb-4">
@@ -70,23 +125,18 @@ const PlayerEditor: React.FC<PlayerEditorProps> = ({ playerNumber, config, onSav
                 </div>
             </div>
 
-            <div className="flex justify-between mt-4">
-                <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                    onClick={handleSave}
-                >
-                    Save
-                </button>
-                <div
-                    className="flex items-center"
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
-                >
-                    <span className="text-sm text-gray-400 mr-2">Preview:</span>
-                    <div
-                        className="w-6 h-6 rounded-full"
-                        style={{ backgroundColor: color }}
-                    />
+            {/* Small preview area */}
+            <div className="mt-4 border border-gray-600 rounded-md p-2">
+                <div className="text-xs text-gray-400 mb-1">Buzz-in Preview</div>
+                <div className="h-20 bg-gray-900 rounded relative overflow-hidden">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div style={{ transform: 'scale(0.25)', transformOrigin: 'center center' }}>
+                            <NumberCanvas 
+                                activatedNumber={playerNumber} 
+                                previewConfig={{ name, color }}
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -97,9 +147,10 @@ const SettingsScreen: React.FC = () => {
     const {
         toggleSettings,
         playerConfigs,
-        updatePlayerConfig,
-        previewPlayer
+        updatePlayerConfig
     } = useGameState();
+    
+    const [showResetAnimation, setShowResetAnimation] = useState(false);
 
     // Animation variants
     const containerVariants = {
@@ -147,19 +198,26 @@ const SettingsScreen: React.FC = () => {
     const handleSaveConfig = (playerNumber: string, newConfig: PlayerConfig) => {
         updatePlayerConfig(playerNumber, newConfig);
     };
+    
+    const handleResetAllToDefaults = () => {
+        // Reset all players to default configuration
+        Object.keys(playerConfigs).forEach(playerNumber => {
+            const defaultConfig = {
+                name: `Player ${playerNumber}`,
+                color: DEFAULT_COLORS[parseInt(playerNumber) % DEFAULT_COLORS.length].toLowerCase()
+            };
+            updatePlayerConfig(playerNumber, defaultConfig);
+        });
+        
+        // Show reset animation
+        setShowResetAnimation(true);
+        setTimeout(() => {
+            setShowResetAnimation(false);
+        }, 1500);
+    };
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-80 z-50 perspective-1000">
-            {/* Preview panel for buzz-in effect */}
-            {previewPlayer !== null && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <NumberCanvas
-                        activatedNumber={previewPlayer}
-                        previewConfig={playerConfigs[previewPlayer]}
-                    />
-                </div>
-            )}
-
             <motion.div
                 className="relative bg-gray-900 text-white p-6 rounded-lg shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-y-auto"
                 variants={containerVariants}
@@ -177,12 +235,25 @@ const SettingsScreen: React.FC = () => {
                     </button>
                 </motion.div>
 
-                <motion.h3
-                    variants={itemVariants}
-                    className="text-xl font-bold mb-4 border-b border-gray-700 pb-2"
-                >
-                    Player Configuration
-                </motion.h3>
+                <motion.div variants={itemVariants} className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                    <h3 className="text-xl font-bold">Player Configuration</h3>
+                    <div className="relative">
+                        <button 
+                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
+                            onClick={handleResetAllToDefaults}
+                        >
+                            Reset All to Defaults
+                        </button>
+                        {showResetAnimation && (
+                            <motion.span
+                                className="absolute inset-0 bg-yellow-500 rounded-md z-0"
+                                initial={{ opacity: 0.7 }}
+                                animate={{ opacity: 0 }}
+                                transition={{ duration: 1 }}
+                            />
+                        )}
+                    </div>
+                </motion.div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {Object.keys(playerConfigs).map((playerNumber) => (

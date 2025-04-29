@@ -21,8 +21,13 @@ const GameControls = () => {
   // Handle key press events
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Settings shortcut - 'o' key to open/close settings
-      if (e.key === 'o' && (gameState === GameState.WAITING_FOR_HOST || gameState === GameState.SETTINGS)) {
+      // Skip keyboard handling entirely if in settings screen
+      if (gameState === GameState.SETTINGS) {
+        return;
+      }
+      
+      // Settings shortcut - 'o' key to open settings (only from WAITING_FOR_HOST state)
+      if (e.key === 'o' && gameState === GameState.WAITING_FOR_HOST) {
         toggleSettings();
         return;
       }
