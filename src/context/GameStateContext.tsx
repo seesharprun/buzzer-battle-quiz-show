@@ -54,7 +54,7 @@ interface GameStateContextType {
   handlePlayerBuzz: (key: string) => void;
 }
 
-const STORAGE_KEY = 'reactnumbers_game_scores';
+const STORAGE_KEY = 'seesharprun-buzzer-battle-quiz-show-react-game-state-context-scoreboard';
 
 const GameStateContext = createContext<GameStateContextType | undefined>(undefined);
 
@@ -208,20 +208,13 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     // We no longer need to explicitly preserve scores as they're managed separately
   };
   
-  // Reset game to be ready for other players after a wrong answer
+  // Reset game to be ready for other players after a wrong answer or when skipping
   const resetGame = () => {
     // Clear banned players list when skipping a question
     setBannedPlayers({});
 
-    if (gameState === GameState.WRONG_ANSWER) {
-      // If we're in wrong answer state, go back to ready for players
-      setGameState(GameState.READY_FOR_PLAYERS);
-      setReadyAnimationState(100);
-    } else {
-      // Otherwise go back to host waiting state
-      resetToHost();
-    }
-    // We no longer need to explicitly preserve scores as they're managed separately
+    // Always go back to waiting for host state when skipping
+    resetToHost();
   };
 
   // Reset all scores
