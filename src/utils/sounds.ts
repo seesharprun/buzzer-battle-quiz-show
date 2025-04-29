@@ -35,6 +35,7 @@ export const sounds = {
   gameStart: new SoundEffect('/sounds/game-start.mp3'),
   tick: new SoundEffect('/sounds/tick.mp3'),
   reset: new SoundEffect('/sounds/reset.mp3'),
+  intro: new SoundEffect('/sounds/intro.mp3')
 };
 
 // Audio context for more advanced sounds if needed

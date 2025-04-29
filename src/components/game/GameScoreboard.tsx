@@ -4,13 +4,28 @@ import { motion } from 'motion/react';
 import { useGameState } from '../../context/GameStateContext';
 
 const GameScoreboard = () => {
-  const { scores, bannedPlayers, resetScores } = useGameState();
+  const { scores, bannedPlayers, resetScores, playerConfigs } = useGameState();
 
   const handleResetClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     resetScores();
   };
+
+  interface Metadata {
+    name: string;
+    color: string;
+  }
+
+  function getMetadata(key: string): Metadata {
+    const playerConfig = key ? playerConfigs[key] : null;
+    const playerName = playerConfig?.name || (key ? `Player ${key}` : '');
+    const playerColor = playerConfig?.color || 'bg-transparent';
+    return {
+      name: playerName,
+      color: playerColor,
+    };
+  }
 
   // Get sorted player numbers for scoreboard
   const sortedPlayers = Object.keys(scores).sort((a, b) => scores[b] - scores[a]);
@@ -47,7 +62,7 @@ const GameScoreboard = () => {
               transition={{ delay: index * 0.1 }}
             >
               <span className={`text-amber-400 font-bold ${bannedPlayers[player] ? 'line-through opacity-50' : ''}`}>
-                Player {player}
+                {getMetadata(player).name}
               </span>
               <motion.span
                 className="bg-gray-700 px-2 py-1 rounded font-mono"
