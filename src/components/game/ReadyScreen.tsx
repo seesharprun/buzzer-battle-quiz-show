@@ -6,9 +6,9 @@ import { useEffect } from 'react';
 import { sounds } from '../../utils/sounds';
 
 const ReadyScreen = () => {
-  const { readyAnimationState, setReadyAnimationState } = useGameState();
+  const { readyAnimationState, setReadyAnimationState, resetGame } = useGameState();
   const readyControls = useAnimationControls();
-  
+
   useEffect(() => {
     // Animate ready state with Framer Motion
     readyControls.start({
@@ -20,12 +20,12 @@ const ReadyScreen = () => {
         ease: "easeInOut"
       }
     });
-    
+
     // Play a ticking sound for urgency
     const tickInterval = setInterval(() => {
       sounds.tick.play();
     }, 800);
-    
+
     return () => {
       readyControls.stop();
       clearInterval(tickInterval);
@@ -44,15 +44,15 @@ const ReadyScreen = () => {
         className="text-center"
         animate={readyControls}
       >
-        <motion.div 
+        <motion.div
           className="relative"
           style={{
             filter: `drop-shadow(0 0 ${20 * readyAnimationState / 100}px hsl(120, 70%, ${50 + (readyAnimationState - 70) / 30 * 20}%))`
           }}
         >
-          <motion.h1 
+          <motion.h1
             className="text-[100px] font-bold text-transparent"
-            style={{ 
+            style={{
               backgroundClip: "text",
               WebkitBackgroundClip: "text",
               backgroundImage: `linear-gradient(to bottom, hsl(120, 70%, ${55 + (readyAnimationState - 70) / 30 * 20}%), hsl(120, 70%, ${30 + (readyAnimationState - 70) / 30 * 20}%))`,
@@ -63,6 +63,19 @@ const ReadyScreen = () => {
           </motion.h1>
         </motion.div>
       </motion.div>
+      
+      {/* Skip button for host */}
+      <motion.button
+        className="absolute bottom-8 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-bold text-lg"
+        onClick={() => resetGame()}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        Skip Question (S)
+      </motion.button>
     </motion.div>
   );
 };

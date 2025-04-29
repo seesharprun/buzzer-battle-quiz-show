@@ -1,28 +1,29 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useGameContext, GameState } from '../context/GameContext';
+import { useGameState, GameState } from '../context/GameStateContext';
 
-export function useKeyPress() {
-  const { gameState, startRound, handlePlayerBuzz } = useGameContext();
+function useKeyPress() {
+  const { gameState, startNewRound, handlePlayerBuzz } = useGameState();
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Host control - Space key to start a round
-      if (e.key === ' ' && gameState === GameState.WAITING_FOR_HOST) {
-        startRound();
+    function handleKeyDown(event: KeyboardEvent) {
+      // Check if gameState is waiting for host and press is spacebar
+      if (gameState === GameState.WAITING_FOR_HOST && event.key === ' ') {
+        startNewRound();
         return;
       }
-
-      // Player buzzing - only allowed when in READY_FOR_PLAYERS state
-      if (gameState === GameState.READY_FOR_PLAYERS && /^[0-9]$/.test(e.key)) {
-        handlePlayerBuzz(e.key);
+      
+      // Check if gameState is ready for players and key is 1-9
+      if (gameState === GameState.READY_FOR_PLAYERS && /^[1-9]$/.test(event.key)) {
+        handlePlayerBuzz(event.key);
+        return;
       }
-    };
+    }
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, startRound, handlePlayerBuzz]);
-
-  return null;
+  }, [gameState, startNewRound, handlePlayerBuzz]);
 }
+
+export { useKeyPress };

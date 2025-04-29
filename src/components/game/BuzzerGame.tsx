@@ -20,13 +20,13 @@ const BuzzerGame = () => {
     if (pressedKey && gameState === GameState.PLAYER_BUZZED) {
       // Use Framer Motion's animate function for the pulsing effect
       const controls = animate(100, 70, {
-        duration: 2.5, 
+        duration: 2.5,
         ease: "easeOut",
         onUpdate: (latest) => {
           setAnimationState(latest);
         }
       });
-      
+
       return () => {
         controls.stop();
       };
@@ -37,10 +37,10 @@ const BuzzerGame = () => {
     <div className="w-full h-full flex flex-col items-center justify-center relative">
       {/* Game Round Counter */}
       <GameRoundCounter />
-      
+
       {/* Game Scoreboard */}
       <GameScoreboard />
-      
+
       <div className="relative w-full h-full flex items-center justify-center">
         {/* Game area content */}
         <AnimatePresence mode="wait">
@@ -70,7 +70,7 @@ const BuzzerGame = () => {
           )}
         </AnimatePresence>
       </div>
-      
+
       {/* Game Controls */}
       <GameControls />
     </div>

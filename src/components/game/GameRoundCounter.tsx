@@ -7,7 +7,7 @@ const GameRoundCounter = () => {
   const { roundCount } = useGameState();
 
   return (
-    <motion.div 
+    <motion.div
       className="absolute top-4 left-4 bg-gray-800 px-4 py-2 rounded-lg"
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}

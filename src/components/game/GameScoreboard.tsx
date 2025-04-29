@@ -6,12 +6,18 @@ import { useGameState } from '../../context/GameStateContext';
 const GameScoreboard = () => {
   const { scores, bannedPlayers, resetScores } = useGameState();
 
+  const handleResetClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    resetScores();
+  };
+
   // Get sorted player numbers for scoreboard
   const sortedPlayers = Object.keys(scores).sort((a, b) => scores[b] - scores[a]);
 
   return (
-    <motion.div 
-      className="absolute top-4 right-4 bg-gray-800 p-4 rounded-lg min-w-[200px]"
+    <motion.div
+      className="absolute top-4 right-4 bg-gray-800 p-4 rounded-lg min-w-[200px] shadow-xl z-10"
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
@@ -19,21 +25,22 @@ const GameScoreboard = () => {
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-lg font-bold text-gray-200">Scoreboard</h3>
         {Object.keys(scores).length > 0 && (
-          <motion.button 
-            onClick={resetScores}
-            className="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <button
+            onClick={handleResetClick}
+            className="text-xs bg-red-600 px-2 py-1 rounded font-medium select-none
+                     hover:bg-red-700 active:bg-red-800 
+                     transition-all duration-150 ease-in-out
+                     focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50"
           >
             Reset
-          </motion.button>
+          </button>
         )}
       </div>
       {sortedPlayers.length > 0 ? (
         <motion.ul>
           {sortedPlayers.map((player, index) => (
-            <motion.li 
-              key={player} 
+            <motion.li
+              key={player}
               className="flex justify-between items-center py-1 border-b border-gray-700 last:border-none"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -42,7 +49,7 @@ const GameScoreboard = () => {
               <span className={`text-amber-400 font-bold ${bannedPlayers[player] ? 'line-through opacity-50' : ''}`}>
                 Player {player}
               </span>
-              <motion.span 
+              <motion.span
                 className="bg-gray-700 px-2 py-1 rounded font-mono"
                 initial={{ scale: 0.8 }}
                 animate={{ scale: 1 }}
@@ -55,7 +62,7 @@ const GameScoreboard = () => {
           ))}
         </motion.ul>
       ) : (
-        <motion.p 
+        <motion.p
           className="text-gray-400 text-sm italic"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

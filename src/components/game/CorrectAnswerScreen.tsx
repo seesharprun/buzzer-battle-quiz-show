@@ -17,15 +17,15 @@ const CorrectAnswerScreen = () => {
       <motion.div
         className="text-center"
       >
-        <motion.div 
+        <motion.div
           className="relative"
           initial={{ scale: 0.9 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <motion.h1 
+          <motion.h1
             className="text-[80px] font-bold text-transparent"
-            style={{ 
+            style={{
               backgroundClip: "text",
               WebkitBackgroundClip: "text",
               backgroundImage: "linear-gradient(to bottom, hsl(120, 80%, 60%), hsl(120, 80%, 35%))",

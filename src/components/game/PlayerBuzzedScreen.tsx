@@ -7,14 +7,14 @@ import { useEffect } from 'react';
 const PlayerBuzzedScreen = () => {
   const { pressedKey, animationState, flashingEffect } = useGameState();
   const playerControls = useAnimationControls();
-  
+
   useEffect(() => {
     if (flashingEffect) {
       // Use Framer Motion for the flashing effect
       playerControls.start({
         opacity: [0.2, 1, 0.5, 1, 0.5, 1],
         scale: [0.95, 1.1, 1, 1.1, 1, 1.05],
-        transition: { 
+        transition: {
           duration: 1.2,
           times: [0, 0.2, 0.4, 0.6, 0.8, 1],
           ease: "easeOut",
@@ -35,7 +35,7 @@ const PlayerBuzzedScreen = () => {
         className="relative flex items-center justify-center"
         animate={playerControls}
       >
-        <motion.div 
+        <motion.div
           className="absolute"
           style={{
             width: `${400 * (1 + (animationState / 100) * 0.5)}px`,
@@ -45,9 +45,9 @@ const PlayerBuzzedScreen = () => {
             boxShadow: `0 0 ${30 * (animationState / 100)}px #ff${Math.floor(200 + (animationState / 100) * 55).toString(16).padStart(2, '0')}33`
           }}
         />
-        <motion.h1 
+        <motion.h1
           className="text-[150px] font-bold z-10"
-          style={{ 
+          style={{
             color: `#ff${Math.floor(200 + (animationState / 100) * 55).toString(16).padStart(2, '0')}33`,
             textShadow: `0 0 ${30 * (animationState / 100)}px #ff${Math.floor(200 + (animationState / 100) * 55).toString(16).padStart(2, '0')}33`,
             scale: 1 + (animationState / 100) * 0.5

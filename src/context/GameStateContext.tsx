@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { sounds } from '../utils/sounds';
 
 // Game states
@@ -22,6 +22,13 @@ export interface BannedPlayers {
   [key: string]: boolean;
 }
 
+// Score event types
+type ScoreEvent = {
+  type: 'ADD' | 'SUBTRACT' | 'RESET';
+  player?: string;
+  amount?: number;
+}
+
 interface GameStateContextType {
   gameState: GameState;
   setGameState: React.Dispatch<React.SetStateAction<GameState>>;
@@ -34,7 +41,6 @@ interface GameStateContextType {
   flashingEffect: boolean;
   setFlashingEffect: React.Dispatch<React.SetStateAction<boolean>>;
   scores: PlayerScores;
-  setScores: React.Dispatch<React.SetStateAction<PlayerScores>>;
   roundCount: number;
   setRoundCount: React.Dispatch<React.SetStateAction<number>>;
   bannedPlayers: BannedPlayers;
@@ -48,6 +54,8 @@ interface GameStateContextType {
   handlePlayerBuzz: (key: string) => void;
 }
 
+const STORAGE_KEY = 'reactnumbers_game_scores';
+
 const GameStateContext = createContext<GameStateContextType | undefined>(undefined);
 
 export const GameStateProvider = ({ children }: { children: ReactNode }) => {
@@ -56,9 +64,61 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const [animationState, setAnimationState] = useState(0);
   const [readyAnimationState, setReadyAnimationState] = useState(0);
   const [flashingEffect, setFlashingEffect] = useState(false);
-  const [scores, setScores] = useState<PlayerScores>({});
+  const [scores, setScoresInternal] = useState<PlayerScores>({});
   const [roundCount, setRoundCount] = useState(0);
   const [bannedPlayers, setBannedPlayers] = useState<BannedPlayers>({});
+
+  // Load scores from localStorage on initial mount
+  useEffect(() => {
+    try {
+      const savedScores = localStorage.getItem(STORAGE_KEY);
+      if (savedScores) {
+        setScoresInternal(JSON.parse(savedScores));
+      }
+    } catch (error) {
+      console.error('Failed to load scores from localStorage:', error);
+    }
+  }, []);
+
+  // Save scores to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(scores));
+    } catch (error) {
+      console.error('Failed to save scores to localStorage:', error);
+    }
+  }, [scores]);
+
+  // Create a unified score dispatch system
+  const dispatchScoreEvent = (event: ScoreEvent) => {
+    switch (event.type) {
+      case 'ADD':
+        if (event.player) {
+          setScoresInternal(prevScores => {
+            const newScores = {
+              ...prevScores,
+              [event.player!]: (prevScores[event.player!] || 0) + (event.amount || 1)
+            };
+            return newScores;
+          });
+        }
+        break;
+      case 'SUBTRACT':
+        if (event.player) {
+          setScoresInternal(prevScores => {
+            const newScores = {
+              ...prevScores,
+              [event.player!]: Math.max(0, (prevScores[event.player!] || 0) - (event.amount || 1))
+            };
+            return newScores;
+          });
+        }
+        break;
+      case 'RESET':
+        setScoresInternal({});
+        break;
+    }
+  };
 
   // Start a new round of the game
   const startNewRound = () => {
@@ -77,6 +137,14 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     
+    // Add player to scores if they don't exist yet (with 0 points initially)
+    if (scores[key] === undefined) {
+      setScoresInternal(prevScores => ({
+        ...prevScores,
+        [key]: 0
+      }));
+    }
+    
     setPressedKey(key);
     setGameState(GameState.PLAYER_BUZZED);
     setAnimationState(100); // Start animation at full intensity
@@ -87,10 +155,15 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   // Award point to player who buzzed in
   const awardPoint = () => {
     if (pressedKey) {
-      setScores(prevScores => ({
-        ...prevScores,
-        [pressedKey]: (prevScores[pressedKey] || 0) + 1
-      }));
+      // Use the dispatch system instead of direct state manipulation
+      dispatchScoreEvent({
+        type: 'ADD',
+        player: pressedKey,
+        amount: 1
+      });
+      
+      // Clear banned players list when someone gets the right answer
+      setBannedPlayers({});
       
       sounds.correct.play();
       
@@ -107,11 +180,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   // Penalize player for incorrect answer
   const penalizePlayer = () => {
     if (pressedKey) {
-      // Penalize the player's score
-      setScores(prevScores => ({
-        ...prevScores,
-        [pressedKey]: Math.max(0, (prevScores[pressedKey] || 0) - 1)
-      }));
+      // No longer subtracting points - just add to banned list
       
       // Add player to banned list for this round
       setBannedPlayers(prev => ({
@@ -131,24 +200,19 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   
   // Reset the game to wait for host
   const resetToHost = () => {
-    // Preserve the current scores
-    const currentScores = { ...scores };
-    
     setGameState(GameState.WAITING_FOR_HOST);
     setPressedKey(null);
     setAnimationState(0);
     setReadyAnimationState(0);
     setFlashingEffect(false);
-    
-    // Ensure scores are maintained when resetting
-    setScores(currentScores);
+    // We no longer need to explicitly preserve scores as they're managed separately
   };
   
   // Reset game to be ready for other players after a wrong answer
   const resetGame = () => {
-    // Explicitly preserve the current scores by creating a copy
-    const currentScores = { ...scores };
-    
+    // Clear banned players list when skipping a question
+    setBannedPlayers({});
+
     if (gameState === GameState.WRONG_ANSWER) {
       // If we're in wrong answer state, go back to ready for players
       setGameState(GameState.READY_FOR_PLAYERS);
@@ -157,14 +221,12 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       // Otherwise go back to host waiting state
       resetToHost();
     }
-    
-    // Ensure scores are maintained
-    setScores(currentScores);
+    // We no longer need to explicitly preserve scores as they're managed separately
   };
 
   // Reset all scores
   const resetScores = () => {
-    setScores({});
+    dispatchScoreEvent({ type: 'RESET' });
     setRoundCount(0);
     sounds.gameStart.play();
   };
@@ -181,8 +243,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       setReadyAnimationState,
       flashingEffect,
       setFlashingEffect,
-      scores,
-      setScores,
+      scores, // We no longer expose setScores directly
       roundCount, 
       setRoundCount,
       bannedPlayers,
